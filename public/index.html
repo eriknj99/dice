@@ -1,0 +1,232 @@
+<!DOCTYPE HTML>
+
+<body id="main">
+
+
+
+<link rel="stylesheet" href="style.css">
+<script src="/socket.io/socket.io.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<div class="container">
+    <div class="spacer"></div>
+    <img id="d1", src="assets/blank.png", onclick="roll();">
+    <img id="d2", src="assets/blank.png", onclick="roll();">
+    <div class="spacer"></div>
+    
+    
+
+</div>
+
+<div class="container">
+    <div class="spacer"></div>
+    <h1 id="total">.</h1> 
+    <div class="spacer"></div>
+</div>
+
+<div class="container">
+    <div class="spacer"></div>
+    <div id="hot2" class="circle" onclick="toggle_hot(2)">2</div>
+    <div id="hot3" class="circle" onclick="toggle_hot(3)">3</div>
+    <div id="hot4" class="circle" onclick="toggle_hot(4)">4</div>
+    <div id="hot5" class="circle" onclick="toggle_hot(5)">5</div>
+    <div id="hot6" class="circle" onclick="toggle_hot(6)">6</div>
+    <div id="hot7" class="circle" onclick="toggle_hot(7)">7</div>
+    <div id="hot8" class="circle" onclick="toggle_hot(8)">8</div>
+    <div id="hot9" class="circle" onclick="toggle_hot(9)">9</div>
+    <div id="hot10" class="circle" onclick="toggle_hot(10)">10</div>
+    <div id="hot11" class="circle" onclick="toggle_hot(11)">11</div>
+    <div id="hot12" class="circle" onclick="toggle_hot(12)">12</div>
+    <div class="spacer"></div>
+    
+</div>
+<br>
+
+
+
+
+<div>
+  <canvas id="myChart"></canvas>
+</div>
+
+
+<div class="container">
+<div id="un_roll" class="my_btn" onclick="unroll()">Unroll</div>
+<div class="spacer"></div>
+<div id="new_game" class="my_btn" onclick="new_game()">New Game</div>
+</div>
+
+<pre id="session"></pre>
+</body>
+
+
+<script>
+    const socket = io();
+    session_id = "";
+    const ctx = document.getElementById('myChart');
+    hot_numbers = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+    
+    
+
+    
+    Chart.defaults.borderColor = '#555555';
+    Chart.defaults.color = '#555555';
+
+    chart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+        labels: ['2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12'],
+        datasets: [{
+            label: 'Rolls',
+            data: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            borderWidth: 0,
+            backgroundColor: '#AC3232'
+        }]
+        },
+        options: {
+            font: {
+                family: 'monospace',
+                size: 48
+
+            },
+            scales: {
+                y: {
+                beginAtZero: true
+                }
+            }
+        }
+    });
+
+    socket.on("session_id", (id) => {
+        console.log("session_id " + id);
+        session_id = id;
+        document.getElementById("session").innerHTML = "Connected";
+    });
+
+    socket.on("alive", (val) => {
+        if(val){
+            document.getElementById("session").innerHTML = "Connected";
+        }
+        else
+        {
+            document.getElementById("session").innerHTML = "Connection lost.... :(";
+        }
+    });
+
+    socket.on("rolls", (rolls) => {
+
+        document.getElementById('d1').style.animation = 'none';
+        document.getElementById('d1').offsetHeight; /* trigger reflow */
+        document.getElementById('d1').style.animation = null; 
+        document.getElementById('d1').style.animation="spin2 0.5s ease-out";
+
+        document.getElementById('d2').style.animation = 'none';
+        document.getElementById('d2').offsetHeight; /* trigger reflow */
+        document.getElementById('d2').style.animation = null; 
+        document.getElementById('d2').style.animation="spin1 0.5s ease-out";
+
+
+        data = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+
+        if(rolls.length == 0){
+            document.getElementById("d1").src = `assets/blank.png`;
+            document.getElementById("d2").src = `assets/blank.png`;
+            document.getElementById("total").innerHTML = ".";
+
+            for(var i = 0; i < data.length; i++){
+                chart.data.datasets[0].data[i] = data[i];
+            }
+
+            chart.update();
+            return;
+        }
+
+        document.getElementById("d1").src = `assets/${rolls[rolls.length -1].d1}.png`;
+        document.getElementById("d2").src = `assets/${rolls[rolls.length -1].d2}.png`;
+
+        document.getElementById("total").innerHTML = rolls[rolls.length -1].total;
+
+        for(var i = 0; i < rolls.length; i++)
+        {
+            data[rolls[i].total - 2]++;
+        }
+
+        for(var i = 0; i < data.length; i++)
+        {
+            chart.data.datasets[0].data[i] = data[i];
+        }
+
+        chart.update();
+
+        
+        if(hot_numbers[rolls[rolls.length -1].total - 2])
+        {
+            const ding = new Audio('assets/ding.mp3');
+            ding.play();
+
+            document.getElementById('main').style.animation = 'none';
+            document.getElementById('main').offsetHeight; /* trigger reflow */
+            document.getElementById('main').style.animation = null; 
+            document.getElementById('main').style.animation="color_shift 2s linear";            
+        }
+    });
+
+    async function keep_alive()
+    {
+        while(true){
+            if(session_id != ""){
+                socket.emit("keep_alive", session_id);
+                socket.emit("get_posts", session_id);
+            }
+
+            await new Promise(r => setTimeout(r, 1000));
+        }
+    }
+
+    socket.emit("new_session");
+    keep_alive();
+
+    socket.emit("get_rolls");
+
+    function roll(){
+        const dice_audio = new Audio('assets/dice.mp3');
+        dice_audio.play();
+        socket.emit("new_roll", session_id);
+    }
+
+    function toggle_hot(number){
+        if(number >= 2 && number <= 12)
+        {
+            if(hot_numbers[number-2] == 0){
+                hot_numbers[number-2] = 1;
+            }
+            else{
+                hot_numbers[number-2] = 0;
+            }
+        }
+
+        hot_color = "#AC3232";
+        cold_color = "#2e2e2e";
+
+        for(var i = 0; i < hot_numbers.length; i++)
+        {
+            document.getElementById(`hot${i+2}`).style.backgroundColor = hot_numbers[i] ? hot_color : cold_color;
+        }
+    }
+
+    function new_game()
+    {
+        socket.emit("new_game");
+    }
+
+    function unroll()
+    {
+        socket.emit("unroll");
+    }
+
+    // Init hot numbers
+    toggle_hot(0);
+
+
+</script>
+

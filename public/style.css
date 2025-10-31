@@ -1,0 +1,87 @@
+
+
+
+body{
+    background-color: #111111;
+    color:#ffffff;
+    font-family: 'Courier New', Courier, monospace;
+}
+
+h1{
+    font-size: 128pt;
+
+}
+
+@keyframes spin1 { 100% { transform:rotate(360deg); } }
+@keyframes spin2 { 100% { transform:rotate(-360deg); } }
+@keyframes color_shift {
+  0%   {background-color:rgb(255, 255, 255); }
+  25%  {background-color:yellow; }
+  50%  {background-color:rgb(255, 102, 0); }
+  75%  {background-color:rgb(128, 0, 0); }
+  100% {background-color:rgb(8, 8, 8); }
+}
+
+
+
+img{
+    image-rendering: pixelated;
+    width : 45%;
+    height: 45%;
+    padding: .5em;
+}
+
+.spacer {
+    display: flex;
+    flex-grow: 1;
+    
+    /*border: 2px dotted rgb(97, 97, 97);*/
+
+}
+
+.pad{
+    display:flex;
+    width: 5%;
+    height: 5%;
+}
+
+.container {
+    
+    display: flex;
+    align-items: left;
+    flex-direction: row;
+    
+    /*border: 2px dotted rgb(102, 168, 96);*/
+    
+}
+
+.circle {
+    width: 8%;
+    height: auto;
+    justify-content: center;
+    align-items: center;
+    border-radius: 0%;
+    font-size: 55pt;
+    color: #FFFFFF;
+    background: #AC3232;
+    display:flex;
+    vertical-align: text-top;
+    background-clip: content-box;
+    padding: .05em;
+
+}
+
+.my_btn {
+    width: auto;
+    height: auto;
+    justify-content: center;
+    border-radius: 0%;
+    font-size: 55pt;
+    color: #FFFFFF;
+    background: #AC3232;
+    display:flex;
+    vertical-align: text-top;
+    background-clip: content-box;
+    padding: .05em;
+
+}
